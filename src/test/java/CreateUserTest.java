@@ -8,8 +8,6 @@ import models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.util.UUID;
 
@@ -17,50 +15,22 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(Parameterized.class)
 public class CreateUserTest {
-
-    private final String email;
-    private final String password;
-    private final String name;
 
     private User user;
     private UserRequests userRequests;
     private String accessToken;
 
-    public CreateUserTest(String email, String password, String name) {
-        this.email = email;
-        this.password = password;
-        this.name = name;
-    }
-
-    @Parameterized.Parameters(name = "Создание пользователя: {0}")
-    public static Object[][] getData() {
-        Faker faker = new Faker();
-
-        return new Object[][]{
-                {
-                        "user_" + UUID.randomUUID() + "@ya.ru",
-                        faker.internet().password(),
-                        faker.name().firstName()
-                },
-                {
-                        "user_" + UUID.randomUUID() + "@ya.ru",
-                        faker.internet().password(),
-                        faker.name().firstName()
-                },
-                {
-                        "user_" + UUID.randomUUID() + "@ya.ru",
-                        faker.internet().password(),
-                        faker.name().firstName()
-                }
-        };
-    }
-
     @Before
     public void setUp() {
         RestAssured.requestSpecification =
                 RequestSpec.requestSpecification();
+
+        Faker faker = new Faker();
+
+        String email = "user_" + UUID.randomUUID() + "@ya.ru";
+        String password = faker.internet().password();
+        String name = faker.name().firstName();
 
         user = new User(email, password, name);
         userRequests = new UserRequests();
