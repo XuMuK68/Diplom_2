@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +44,7 @@ public class CreateUserTest {
         Response response = userRequests.createUser(user);
 
         response.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true));
 
         accessToken = response.jsonPath().getString("accessToken");
@@ -65,7 +66,7 @@ public class CreateUserTest {
             Response response = userRequests.deleteUser(accessToken);
 
             response.then()
-                    .statusCode(202)
+                    .statusCode(SC_ACCEPTED)
                     .body("success", equalTo(true));
         }
 

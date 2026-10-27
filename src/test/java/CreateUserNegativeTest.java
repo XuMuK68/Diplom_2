@@ -6,9 +6,13 @@ import methods.UserRequests;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.After;
-import static org.hamcrest.Matchers.equalTo;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.apache.http.HttpStatus.*;
 
 public class CreateUserNegativeTest {
 
@@ -23,21 +27,52 @@ public class CreateUserNegativeTest {
     }
 
     @Test
+    @DisplayName("Регистрация без email")
+    public void createUserWithoutEmail() {
+        Map<String, String> body = new HashMap<>();
+        body.put("password", "Test12345");
+        body.put("name", "Александр");
+
+        userRequests.createUserWithBody(body)
+                .then()
+                .log().all()
+                .statusCode(SC_FORBIDDEN)
+                .body("success", equalTo(false))
+                .body("message", equalTo("Email, password and name are required fields"));
+    }
+
+    @Test
     @DisplayName("Регистрация без пароля")
     public void createUserWithoutPassword() {
         String email = "user_" + UUID.randomUUID() + "@ya.ru";
 
-        String body = "{"
-                + "\"email\":\"" + email + "\","
-                + "\"name\":\"Александр\""
-                + "}";
+        Map<String, String> body = new HashMap<>();
+        body.put("email", email);
+        body.put("name", "Александр");
 
-        Response response =
-                userRequests.createUserWithBody(body);
-
-        response.then()
+        userRequests.createUserWithBody(body)
+                .then()
                 .log().all()
-                .statusCode(403);
+                .statusCode(SC_FORBIDDEN)
+                .body("success", equalTo(false))
+                .body("message", equalTo("Email, password and name are required fields"));
+    }
+
+    @Test
+    @DisplayName("Регистрация без имени")
+    public void createUserWithoutName() {
+        String email = "user_" + UUID.randomUUID() + "@ya.ru";
+
+        Map<String, String> body = new HashMap<>();
+        body.put("email", email);
+        body.put("password", "Test12345");
+
+        userRequests.createUserWithBody(body)
+                .then()
+                .log().all()
+                .statusCode(SC_FORBIDDEN)
+                .body("success", equalTo(false))
+                .body("message", equalTo("Email, password and name are required fields"));
     }
 
     @Test
@@ -47,18 +82,18 @@ public class CreateUserNegativeTest {
         String password = "Test12345";
         String name = "Александр";
 
-        String body = "{"
-                + "\"email\":\"" + email + "\","
-                + "\"password\":\"" + password + "\","
-                + "\"name\":\"" + name + "\""
-                + "}";
+        // Формируем тело запроса с данными пользователя
+        Map<String, String> body = new HashMap<>();
+        body.put("email", email);
+        body.put("password", password);
+        body.put("name", name);
 
         // Сначала регистрируем пользователя
         Response createResponse =
                 userRequests.createUserWithBody(body);
 
         createResponse.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true));
 
         accessToken = createResponse.jsonPath()
@@ -68,7 +103,9 @@ public class CreateUserNegativeTest {
         userRequests.createUserWithBody(body)
                 .then()
                 .log().all()
-                .statusCode(403);
+                .statusCode(SC_FORBIDDEN)
+                .body("success", equalTo(false))
+                .body("message", equalTo("User already exists"));
     }
 
     @After
@@ -77,7 +114,7 @@ public class CreateUserNegativeTest {
             userRequests.deleteUser(accessToken)
                     .then()
                     .log().all()
-                    .statusCode(202)
+                    .statusCode(SC_ACCEPTED)
                     .body("success", equalTo(true));
         }
     }

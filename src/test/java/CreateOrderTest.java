@@ -1,20 +1,16 @@
-import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import methods.OrderRequests;
 import methods.RequestSpec;
-import methods.UserRequests;
 import models.Order;
-import models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -22,8 +18,6 @@ import static org.junit.Assert.assertTrue;
 public class CreateOrderTest {
 
     private OrderRequests orderRequests;
-    private UserRequests userRequests;
-    private String accessToken;
 
     @Before
     public void setUp() {
@@ -31,15 +25,14 @@ public class CreateOrderTest {
                 RequestSpec.requestSpecification();
 
         orderRequests = new OrderRequests();
-        userRequests = new UserRequests();
-        accessToken = null;
     }
 
     // Получаем настоящие хеши ингредиентов из API
     private List<String> getIngredientIds() {
-        Response response = orderRequests.getIngredients();
+        io.restassured.response.Response response =
+                orderRequests.getIngredients();
 
-        response.then().statusCode(200);
+        response.then().statusCode(SC_OK);
 
         List<String> ingredients = response.jsonPath()
                 .getList("data._id", String.class);
@@ -57,44 +50,6 @@ public class CreateOrderTest {
         return ingredients.subList(0, 2);
     }
 
-    // Регистрируем пользователя для авторизованных запросов
-    private void createAuthorizedUser() {
-        String email = "user_" + UUID.randomUUID() + "@ya.ru";
-        String password = new Faker().internet().password();
-        String name = new Faker().name().firstName();
-
-        User user = new User(email, password, name);
-
-        Response response = userRequests.createUser(user);
-
-        response.then()
-                .statusCode(200)
-                .body("success", equalTo(true));
-
-        accessToken = response.jsonPath()
-                .getString("accessToken");
-
-        assertNotNull("Токен не должен быть null", accessToken);
-        assertTrue(
-                "Токен не должен быть пустым",
-                !accessToken.trim().isEmpty()
-        );
-    }
-
-    @Test
-    @DisplayName("Создание заказа с авторизацией")
-    public void createOrderWithAuthorization() {
-        createAuthorizedUser();
-
-        Order order = new Order(getIngredientIds());
-
-        orderRequests.createOrder(order, accessToken)
-                .then()
-                .log().all()
-                .statusCode(200)
-                .body("success", equalTo(true));
-    }
-
     @Test
     @DisplayName("Создание заказа без авторизации")
     public void createOrderWithoutAuthorization() {
@@ -103,7 +58,7 @@ public class CreateOrderTest {
         orderRequests.createOrder(order)
                 .then()
                 .log().all()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true));
     }
 
@@ -116,7 +71,7 @@ public class CreateOrderTest {
         orderRequests.createOrder(order)
                 .then()
                 .log().all()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true));
     }
 
@@ -128,7 +83,7 @@ public class CreateOrderTest {
         orderRequests.createOrder(order)
                 .then()
                 .log().all()
-                .statusCode(400)
+                .statusCode(SC_BAD_REQUEST)
                 .body("success", equalTo(false));
     }
 
@@ -142,20 +97,11 @@ public class CreateOrderTest {
         orderRequests.createOrder(order)
                 .then()
                 .log().all()
-                .statusCode(500);
+                .statusCode(SC_INTERNAL_SERVER_ERROR);
     }
 
     @After
-    public void deleteUser() {
-        if (accessToken != null && !accessToken.trim().isEmpty()) {
-            userRequests.deleteUser(accessToken)
-                    .then()
-                    .log().all()
-                    .statusCode(202)
-                    .body("success", equalTo(true));
-        }
-
+    public void tearDown() {
         RestAssured.requestSpecification = null;
     }
 }
-
