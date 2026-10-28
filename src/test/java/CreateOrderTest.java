@@ -84,7 +84,8 @@ public class CreateOrderTest {
                 .then()
                 .log().all()
                 .statusCode(SC_BAD_REQUEST)
-                .body("success", equalTo(false));
+                .body("success", equalTo(false))
+                .body("message", equalTo("Ingredient ids must be provided"));
     }
 
     @Test

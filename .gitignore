@@ -40,3 +40,4 @@ build/
 .idea/
 # Allure local installation
 .allure/
+allure-report/

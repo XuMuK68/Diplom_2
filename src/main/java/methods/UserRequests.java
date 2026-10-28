@@ -4,7 +4,6 @@ import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import models.Login;
 import models.User;
-import java.util.Map;
 
 import static constants.ApiConstants.*;
 import static io.restassured.RestAssured.given;
@@ -64,13 +63,5 @@ public class UserRequests {
         return given() // Начало построения запроса с использованием метода given() из библиотеки RestAssured
                 .header("Authorization", token) // Установка заголовка Authorization с переданным токеном
                 .delete(USER); // Выполнение DELETE-запроса на указанный путь из константы USER
-    }
-
-    @Step("Регистрация с произвольным набором полей")
-    public Response createUserWithBody(Map<String, String> body) {
-        return RequestSpec.requestSpecification()
-                .body(body)
-                .when()
-                .post(USER_REGISTER);
     }
 }

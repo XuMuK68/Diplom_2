@@ -88,7 +88,8 @@ public class LoginUserTest {
                 .then()
                 .log().all()
                 .statusCode(SC_UNAUTHORIZED)
-                .body("success", equalTo(false));
+                .body("success", equalTo(false))
+                .body("message", equalTo("email or password are incorrect"));
     }
 
     @Test
